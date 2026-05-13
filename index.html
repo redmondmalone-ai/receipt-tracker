@@ -237,7 +237,7 @@ const KEY   = 'receipts_atl2026';
 const TRIP  = '2026 Atlantic Highlights Tour';
 
 // This gets replaced with your Netlify URL after deployment
-const API_ENDPOINT = '/.netlify/functions/read-receipt';
+const API_ENDPOINT = 'https://statuesque-haupia-251a78.netlify.app/.netlify/functions/read-receipt';
 
 const SEED = [
     {trip:TRIP,date:"2024-06-05",name:"Sky Lagoon",currency:"ISK",amount:13240,rate:0.00814,notes:"Geothermal spa & restaurant, Reykjavik"},
@@ -314,9 +314,9 @@ async function readWithAI(dataUrl) {
             })
         });
 
-        if (!res.ok) throw new Error('Server error ' + res.status);
+        
 
-        const data = await res.json();
+        const responseText = await res.text(); if (!res.ok) throw new Error('HTTP ' + res.status + ': ' + responseText.substring(0,200)); const data = JSON.parse(responseText); if (data.error) throw new Error(data.error);
         const text = data.content?.[0]?.text?.trim().replace(/```json|```/g,'') || '';
         const x = JSON.parse(text);
 
