@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipt Tracker — Atlantic Highlights 2026</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f0f2f5;min-height:100vh;padding:16px}
+.wrap{max-width:1000px;margin:0 auto}
+h1{text-align:center;font-size:1.6em;color:#222;margin-bottom:4px}
+.sub{text-align:center;color:#aaa;font-size:.9em;margin-bottom:20px}
+
+/* SUMMARY BAR */
+.summary{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:12px;padding:20px;text-align:center;margin-bottom:16px}
+.summary .total{font-size:2.2em;font-weight:700;margin:6px 0}
+.summary .breakdown{font-size:.95em;opacity:.9}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.stat{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.stat .n{font-size:1.4em;font-weight:700;color:#333}
+.stat .l{font-size:.8em;color:#aaa;margin-top:2px}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:380px 1fr;gap:16px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}}
+
+/* CARD */
+.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{font-size:1.1em;color:#333;margin-bottom:16px}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid #f0f0f0;margin-bottom:16px}
+.tab{flex:1;padding:10px;border:none;background:none;cursor:pointer;font-weight:700;color:#bbb;border-bottom:3px solid transparent;font-size:.9em}
+.tab.on{color:#ff6b6b;border-bottom-color:#ff6b6b}
+.pane{display:none}.pane.on{display:block}
+
+/* FORM */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:.83em;font-weight:700;color:#555;margin-bottom:4px}
+.fg input,.fg textarea,.fg select{width:100%;padding:9px 11px;border:1px solid #ddd;border-radius:6px;font-size:.95em;font-family:inherit}
+.fg input:focus,.fg textarea:focus{outline:none;border-color:#ff6b6b}
+.fg textarea{min-height:60px;resize:vertical}
+.cur{display:flex;gap:8px;flex-wrap:wrap}
+.cur button{padding:7px 13px;border:2px solid #ddd;background:#fff;border-radius:6px;cursor:pointer;font-size:.85em;font-weight:700}
+.cur button.on{border-color:#ff6b6b;background:#fff5f5;color:#ff6b6b}
+
+/* BUTTONS */
+.btns{display:flex;gap:8px;margin-top:14px}
+.add{flex:1;padding:11px;background:#ff6b6b;color:#fff;border:none;border-radius:7px;font-weight:700;font-size:.95em;cursor:pointer}
+.add:hover{background:#ff5252}
+.add:disabled{background:#ffb3b3;cursor:not-allowed}
+.clr{padding:11px 14px;background:#eee;color:#555;border:none;border-radius:7px;font-weight:700;cursor:pointer}
+
+/* UPLOAD */
+.drop{border:2px dashed #ff6b6b;border-radius:10px;padding:24px 16px;text-align:center;cursor:pointer;background:#fff8f8;margin-bottom:12px;transition:background .2s}
+.drop:hover{background:#ffecec}
+.drop input{display:none}
+.drop .ico{font-size:2em;margin-bottom:6px}
+#preview{width:100%;max-height:200px;object-fit:contain;border-radius:8px;border:1px solid #eee;margin-bottom:10px;display:none}
+
+/* AI STATUS */
+.ais{padding:10px 12px;border-radius:7px;font-size:.87em;margin-bottom:10px;display:none;align-items:center;gap:8px}
+.ais.show{display:flex}
+.ais.load{background:#e8f4fd;color:#1a6c9e;border:1px solid #bee5f7}
+.ais.ok{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.ais.fail{background:#fff3cd;color:#856404;border:1px solid #ffeeba}
+.spin{width:14px;height:14px;border:2px solid #bee5f7;border-top-color:#1a6c9e;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.aibadge{display:inline-block;background:#28a745;color:#fff;font-size:.7em;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle}
+.ok-field{border-color:#28a745!important;background:#f0fff4!important}
+
+/* LIST */
+.list-controls{display:flex;gap:10px;margin-bottom:12px}
+.list-controls select,.list-controls input{padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:.88em}
+.list-controls input{flex:1}
+.list{max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.rc{background:#fafafa;border-left:4px solid #ff6b6b;border-radius:7px;padding:11px 13px;display:flex;justify-content:space-between;gap:10px}
+.rc.isk{border-left-color:#667eea}
+.rc .rn{font-weight:700;font-size:.93em;color:#222}
+.rc .rm{font-size:.8em;color:#aaa;margin-top:2px}
+.rc .rnotes{font-size:.8em;color:#777;margin-top:4px;font-style:italic}
+.rc .rusd{font-size:1.1em;font-weight:700;color:#ff6b6b;text-align:right}
+.rc .rorig{font-size:.78em;color:#ccc;text-align:right}
+.rc .rdel{font-size:.75em;color:#ddd;cursor:pointer;display:block;text-align:right;margin-top:3px}
+.rc .rdel:hover{color:#ff6b6b}
+.badge{font-size:.72em;padding:1px 6px;border-radius:8px;margin-left:4px}
+.beur{background:#fff0dc;color:#b07000}
+.bisk{background:#e8eeff;color:#4455cc}
+
+/* FEEDBACK */
+.fb{padding:10px 12px;border-radius:7px;margin-bottom:12px;font-size:.9em;display:none}
+.fb.ok{background:#d4edda;color:#155724;border-left:3px solid #28a745;display:block}
+.fb.err{background:#f8d7da;color:#721c24;border-left:3px solid #dc3545;display:block}
+
+.expbtn{width:100%;margin-top:12px;padding:10px;background:#5a6acf;color:#fff;border:none;border-radius:7px;font-weight:700;cursor:pointer}
+.expbtn:hover{background:#4a5abf}
+.rstbtn{font-size:.78em;color:#ccc;background:none;border:none;cursor:pointer;float:right}
+.rstbtn:hover{color:#999}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💰 Receipt Tracker</h1>
+  <p class="sub">🌊 2026 Atlantic Highlights Tour &nbsp;·&nbsp; 🇮🇸 Iceland → 🇪🇸 Tenerife</p>
+
+  <div class="summary">
+    <div style="opacity:.8;font-size:.85em">Total Spent</div>
+    <div class="total" id="gTotal">$0.00</div>
+    <div class="breakdown">🇮🇸 <span id="iTotal">$0</span> &nbsp;|&nbsp; 🇪🇸 <span id="tTotal">$0</span></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="n" id="sCount">0</div><div class="l">Receipts</div></div>
+    <div class="stat"><div class="n" id="sAvg">$0</div><div class="l">Average</div></div>
+    <div class="stat"><div class="n" id="sMax">$0</div><div class="l">Biggest</div></div>
+  </div>
+
+  <div class="layout">
+    <!-- ADD RECEIPT -->
+    <div class="card">
+      <h2>➕ Add Receipt <button class="rstbtn" onclick="doReset()">🔄 Reset</button></h2>
+      <div id="fb" class="fb"></div>
+
+      <div class="tabs">
+        <button class="tab on" onclick="goTab('m',this)">✏️ Manual</button>
+        <button class="tab" onclick="goTab('p',this)">📸 Photo AI</button>
+      </div>
+
+      <!-- MANUAL -->
+      <div id="pm" class="pane on">
+        <div class="fg"><label>Trip</label><input id="mtrip" value="2026 Atlantic Highlights Tour"></div>
+        <div class="fg"><label>Date</label><input type="date" id="mdate"></div>
+        <div class="fg"><label>Establishment</label><input id="mname" placeholder="Restaurant or shop name"></div>
+        <div class="fg">
+          <label>Currency</label>
+          <div class="cur">
+            <button class="on" onclick="mCur('EUR',this)">€ EUR</button>
+            <button onclick="mCur('ISK',this)">kr ISK</button>
+            <button onclick="mCur('USD',this)">$ USD</button>
+          </div>
+          <input type="hidden" id="mcur" value="EUR">
+        </div>
+        <div class="fg"><label>Amount</label><input type="number" id="mamt" step="0.01" placeholder="0.00"></div>
+        <div class="fg"><label>Exchange Rate (to USD)</label><input type="number" id="mrate" step="0.0001" value="1.1748"></div>
+        <div class="fg"><label>Notes</label><textarea id="mnotes" placeholder="What was this for?"></textarea></div>
+        <div class="btns">
+          <button class="add" onclick="addManual()">Add Receipt</button>
+          <button class="clr" onclick="clrManual()">Clear</button>
+        </div>
+      </div>
+
+      <!-- PHOTO -->
+      <div id="pp" class="pane">
+        <div class="drop" onclick="document.getElementById('fi').click()">
+          <div class="ico">📸</div>
+          <div style="font-weight:700;color:#555">Tap to upload receipt photo</div>
+          <div style="font-size:.82em;color:#aaa;margin-top:4px">JPG · PNG · HEIC · WebP</div>
+          <input type="file" id="fi" accept="image/*" onchange="onPhoto(event)">
+        </div>
+        <img id="preview" alt="receipt">
+        <div id="ais" class="ais"></div>
+
+        <div class="fg"><label>Trip</label><input id="ptrip" value="2026 Atlantic Highlights Tour"></div>
+        <div class="fg"><label>Date <span id="bd"></span></label><input type="date" id="pdate"></div>
+        <div class="fg"><label>Establishment <span id="bn"></span></label><input id="pname" placeholder="Filled from photo..."></div>
+        <div class="fg"><label>Amount <span id="ba"></span></label><input type="number" id="pamt" step="0.01" placeholder="Filled from photo..."></div>
+        <div class="fg">
+          <label>Currency <span id="bc"></span></label>
+          <div class="cur">
+            <button class="on" id="cEUR" onclick="pCur('EUR',this)">€ EUR</button>
+            <button id="cISK" onclick="pCur('ISK',this)">kr ISK</button>
+            <button id="cUSD" onclick="pCur('USD',this)">$ USD</button>
+          </div>
+          <input type="hidden" id="pcur" value="EUR">
+        </div>
+        <div class="fg"><label>Exchange Rate</label><input type="number" id="prate" step="0.0001" value="1.1748"></div>
+        <div class="fg"><label>Notes <span id="bno"></span></label><textarea id="pnotes" placeholder="Filled from photo..."></textarea></div>
+        <div class="btns">
+          <button class="add" id="padd" onclick="addPhoto()">Add Receipt</button>
+          <button class="clr" onclick="clrPhoto()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="card">
+      <h2>📋 All Receipts</h2>
+      <div class="list-controls">
+        <select onchange="setFilter(this.value)">
+          <option value="">All</option>
+          <option value="ISK">🇮🇸 Iceland</option>
+          <option value="EUR">🇪🇸 Tenerife</option>
+        </select>
+        <input placeholder="Search..." oninput="setSearch(this.value)">
+      </div>
+      <div class="list" id="list"></div>
+      <button class="expbtn" onclick="doExport()">📥 Export CSV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const R={EUR:1.1748,ISK:0.00814,USD:1.0};
+const SK='atl26';
+const TRIP='2026 Atlantic Highlights Tour';
+const EP='/netlify/functions/scan';
+
+const SEED=[
+  {trip:TRIP,date:'2024-06-05',name:'Sky Lagoon',currency:'ISK',amount:13240,rate:.00814,notes:'Geothermal spa & restaurant, Reykjavik'},
+  {trip:TRIP,date:'2026-05-06',name:'Kol Restaurant',currency:'ISK',amount:19540,rate:.00814,notes:'Fine dining – cocktails, appetizers, wine'},
+  {trip:TRIP,date:'2026-05-06',name:'Dimon11',currency:'ISK',amount:15080,rate:.00814,notes:'Restaurant – lamb, fish, wine'},
+  {trip:TRIP,date:'2026-05-06',name:'Kvittun Korthafa SALA',currency:'ISK',amount:2400,rate:.00814,notes:'Bar, Reykjavik'},
+  {trip:TRIP,date:'2026-05-07',name:'Lava Centre',currency:'ISK',amount:10400,rate:.00814,notes:'Volcano museum, Hvolsvelli'},
+  {trip:TRIP,date:'2026-05-07',name:'Eldstó Art Café',currency:'ISK',amount:10940,rate:.00814,notes:'Café – fish soup, salad, wine'},
+  {trip:TRIP,date:'2026-05-07',name:'Hótel Geysir',currency:'ISK',amount:1900,rate:.00814,notes:'Hotel bar, Selfoss'},
+  {trip:TRIP,date:'2026-05-07',name:'Messinn',currency:'ISK',amount:27590,rate:.00814,notes:'Restaurant – seafood dinners'},
+  {trip:TRIP,date:'2026-05-07',name:'Apotek Kitchen + Bar',currency:'ISK',amount:7180,rate:.00814,notes:'Restaurant – drinks'},
+  {trip:TRIP,date:'2026-05-06',name:'Hotel Reykjavik Saga',currency:'ISK',amount:12771,rate:.00814,notes:'Hotel – 2 nights + drinks & snacks'},
+  {trip:TRIP,date:'2026-05-08',name:'ELDA Restaurant',currency:'ISK',amount:5880,rate:.00814,notes:'Café – eggs benedict, sandwich, coffee'},
+  {trip:TRIP,date:'2026-05-08',name:'El Mirador de la Marina',currency:'EUR',amount:132.4,rate:1.1748,notes:'Seafood dinner, Los Abrigos'},
+  {trip:TRIP,date:'2026-05-09',name:'El Rincón del Pescador',currency:'EUR',amount:40.34,rate:1.1748,notes:'Seafood & wine, Las Américas'},
+  {trip:TRIP,date:'2026-05-09',name:'Mare Nostrum Resort',currency:'EUR',amount:19,rate:1.1748,notes:'Resort bar – mojitos'},
+  {trip:TRIP,date:'2026-05-09',name:'Cajasiete BE NATURE',currency:'EUR',amount:37,rate:1.1748,notes:'Wellness/spa'},
+  {trip:TRIP,date:'2026-05-09',name:'Delicious World',currency:'EUR',amount:10.5,rate:1.1748,notes:'Drinks & snacks'},
+  {trip:TRIP,date:'2026-05-09',name:'Piccolo Sama',currency:'EUR',amount:16,rate:1.1748,notes:'Restaurant, Los Cristianos'},
+  {trip:TRIP,date:'2026-05-09',name:'Zanzibar Golf del Sur',currency:'EUR',amount:123,rate:1.1748,notes:'Seafood & tapas dinner'},
+  {trip:TRIP,date:'2026-05-10',name:'Harbor Club Pool Bar',currency:'EUR',amount:34.15,rate:1.1748,notes:'Pool bar'},
+  {trip:TRIP,date:'2026-05-10',name:'Restaurante La Fuente',currency:'EUR',amount:17,rate:1.1748,notes:'Wine, bread, Masca'},
+  {trip:TRIP,date:'2026-05-10',name:'Sakura Japanese Restaurant',currency:'EUR',amount:53.2,rate:1.1748,notes:'2 menu dinners'},
+  {trip:TRIP,date:'2026-05-11',name:"Zacary's",currency:'EUR',amount:12.1,rate:1.1748,notes:'Papas, beer, cider – 11:04 AM'},
+  {trip:TRIP,date:'2026-05-11',name:"Zacary's",currency:'EUR',amount:36.2,rate:1.1748,notes:'Beer, cider, baguette, ham – 11:55 AM'},
+  {trip:TRIP,date:'2026-05-11',name:"Grandee O'Donnell",currency:'EUR',amount:61.9,rate:1.1748,notes:'Kilkenny, Guinness, chicken salad, cheeseburger'},
+  {trip:TRIP,date:'2026-05-12',name:'Cafetería 1 – Mount Teide',currency:'EUR',amount:12.7,rate:1.1748,notes:'Lunch at Mount Teide – Fonteide, chicken sandwich'},
+  {trip:TRIP,date:'2026-05-12',name:'Restaurant P',currency:'EUR',amount:10.5,rate:1.1748,notes:'Mount Teide – red wine, white wine, tarta bien me sabe'},
+  {trip:TRIP,date:'2026-05-12',name:'Moisés Camacho Fumero',currency:'EUR',amount:50.7,rate:1.1748,notes:'Dinner – chickpea stew was awesome! Need that recipe.'}
+];
+
+let data=JSON.parse(localStorage.getItem(SK))||SEED;
+if(!data.length){data=[...SEED];save();}
+let fCur='',fSearch='';
+
+window.onload=()=>{
+  document.getElementById('mdate').valueAsDate=new Date();
+  document.getElementById('pdate').valueAsDate=new Date();
+  render();
+};
+
+// PHOTO
+async function onPhoto(e){
+  const f=e.target.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    const img=document.getElementById('preview');
+    img.src=ev.target.result;img.style.display='block';
+    await scanReceipt(ev.target.result);
+  };
+  reader.readAsDataURL(f);
+}
+
+async function scanReceipt(dataUrl){
+  setAI('load','Reading your receipt...');
+  document.getElementById('padd').disabled=true;
+  const b64=dataUrl.split(',')[1];
+  const mime=dataUrl.split(';')[0].split(':')[1];
+  try{
+    const res=await fetch(EP,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:mime,data:b64}},
+        {type:'text',text:'Read this receipt image carefully. Reply with ONLY a valid JSON object and nothing else:\n{"name":"establishment name","date":"YYYY-MM-DD","amount":0.00,"currency":"EUR","notes":"list main items"}\nRules: currency = EUR, ISK, or USD only. Amount = the final total paid on the receipt.'}
+      ]}]})
+    });
+    const txt=await res.text();
+    if(!res.ok)throw new Error('Server error '+res.status+': '+txt.slice(0,120));
+    const json=JSON.parse(txt);
+    if(json.error)throw new Error(json.error.message||json.error);
+    const raw=(json.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+    const x=JSON.parse(raw);
+    if(x.name){fill('pname',x.name);mk('bn');}
+    if(x.date){fill('pdate',x.date);mk('bd');}
+    if(x.amount){fill('pamt',x.amount);mk('ba');}
+    if(x.notes){fill('pnotes',x.notes);mk('bno');}
+    if(x.currency){setCurDirect(x.currency);mk('bc');}
+    setAI('ok','✅ Done! Review the fields and tap Add Receipt.');
+  }catch(err){
+    setAI('fail','⚠️ '+err.message);
+  }
+  document.getElementById('padd').disabled=false;
+}
+
+function fill(id,v){const el=document.getElementById(id);el.value=v;el.classList.add('ok-field');}
+function mk(id){document.getElementById(id).innerHTML='<span class="aibadge">✓ AI</span>';}
+function setAI(t,msg){
+  const el=document.getElementById('ais');
+  el.className='ais show '+t;
+  el.innerHTML=(t==='load'?'<div class="spin"></div>':'')+msg;
+}
+
+// TABS & CURRENCY
+function goTab(t,btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('p'+t).classList.add('on');
+  btn.classList.add('on');
+}
+function mCur(c,btn){
+  document.getElementById('mcur').value=c;
+  document.querySelectorAll('#pm .cur button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('mrate').value=R[c];
+}
+function pCur(c,btn){
+  document.getElementById('pcur').value=c;
+  document.querySelectorAll('#pp .cur button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('prate').value=R[c];
+}
+function setCurDirect(c){
+  document.getElementById('pcur').value=c;
+  document.querySelectorAll('#pp .cur button').forEach(b=>b.classList.remove('on'));
+  const btn=document.getElementById('c'+c);
+  if(btn)btn.classList.add('on');
+  document.getElementById('prate').value=R[c]||1;
+}
+
+// ADD
+function addManual(){
+  const r={
+    trip:document.getElementById('mtrip').value.trim(),
+    date:document.getElementById('mdate').value,
+    name:document.getElementById('mname').value.trim(),
+    currency:document.getElementById('mcur').value,
+    amount:parseFloat(document.getElementById('mamt').value),
+    rate:parseFloat(document.getElementById('mrate').value),
+    notes:document.getElementById('mnotes').value.trim()
+  };
+  if(!r.date||!r.name||!r.amount){msg('Please fill Date, Establishment and Amount','err');return;}
+  push(r);msg('✅ Receipt added!','ok');clrManual();
+}
+function addPhoto(){
+  const r={
+    trip:document.getElementById('ptrip').value.trim(),
+    date:document.getElementById('pdate').value,
+    name:document.getElementById('pname').value.trim(),
+    currency:document.getElementById('pcur').value,
+    amount:parseFloat(document.getElementById('pamt').value),
+    rate:parseFloat(document.getElementById('prate').value),
+    notes:document.getElementById('pnotes').value.trim()
+  };
+  if(!r.date||!r.name||!r.amount){msg('Please fill Date, Establishment and Amount','err');return;}
+  push(r);msg('✅ Receipt added!','ok');clrPhoto();
+}
+function push(r){data.push(r);save();render();}
+function save(){localStorage.setItem(SK,JSON.stringify(data));}
+
+function clrManual(){
+  document.getElementById('mdate').valueAsDate=new Date();
+  ['mname','mamt','mnotes'].forEach(id=>document.getElementById(id).value='');
+}
+function clrPhoto(){
+  document.getElementById('pdate').valueAsDate=new Date();
+  ['pname','pamt','pnotes'].forEach(id=>{
+    const el=document.getElementById(id);el.value='';el.classList.remove('ok-field');
+  });
+  document.getElementById('fi').value='';
+  document.getElementById('preview').style.display='none';
+  document.getElementById('ais').className='ais';
+  ['bd','bn','ba','bc','bno'].forEach(id=>document.getElementById(id).innerHTML='');
+}
+function del(i){if(!confirm('Delete this receipt?'))return;data.splice(i,1);save();render();}
+function doReset(){
+  if(!confirm('Reset to original 27 receipts?'))return;
+  data=[...SEED];save();render();msg('Reset done','ok');
+}
+function setFilter(v){fCur=v;render();}
+function setSearch(v){fSearch=v.toLowerCase();render();}
+
+function usd(r){return r.amount*r.rate;}
+function fmt(n){return'$'+n.toFixed(2);}
+
+function render(){
+  const tot=data.reduce((s,r)=>s+usd(r),0);
+  const ice=data.filter(r=>r.currency==='ISK').reduce((s,r)=>s+usd(r),0);
+  const ten=data.filter(r=>r.currency==='EUR').reduce((s,r)=>s+usd(r),0);
+  const mx=data.length?Math.max(...data.map(r=>usd(r))):0;
+  document.getElementById('gTotal').textContent=fmt(tot);
+  document.getElementById('iTotal').textContent=fmt(ice);
+  document.getElementById('tTotal').textContent=fmt(ten);
+  document.getElementById('sCount').textContent=data.length;
+  document.getElementById('sAvg').textContent=fmt(tot/Math.max(data.length,1));
+  document.getElementById('sMax').textContent=fmt(mx);
+
+  const filtered=data.filter(r=>{
+    if(fCur&&r.currency!==fCur)return false;
+    if(fSearch&&!r.name.toLowerCase().includes(fSearch)&&!(r.notes||'').toLowerCase().includes(fSearch))return false;
+    return true;
+  });
+
+  document.getElementById('list').innerHTML=filtered.length
+    ?filtered.slice().reverse().map(r=>{
+        const i=data.indexOf(r),u=usd(r).toFixed(2),isk=r.currency==='ISK';
+        return`<div class="rc${isk?' isk':''}">
+          <div style="flex:1">
+            <div class="rn">${r.name}<span class="badge ${isk?'bisk':'beur'}">${isk?'🇮🇸 ISK':'🇪🇸 EUR'}</span></div>
+            <div class="rm">${r.date} · ${r.currency} ${r.amount.toLocaleString()}</div>
+            ${r.notes?`<div class="rnotes">${r.notes}</div>`:''}
+          </div>
+          <div>
+            <div class="rusd">$${u}</div>
+            <div class="rorig">${r.currency} ${r.amount}</div>
+            <span class="rdel" onclick="del(${i})">✕ delete</span>
+          </div>
+        </div>`;
+      }).join('')
+    :'<div style="text-align:center;padding:40px;color:#ccc">No receipts match</div>';
+}
+
+function doExport(){
+  let csv='Date,Name,Currency,Amount,Rate,USD,Notes,Trip\n';
+  data.forEach(r=>{csv+=`${r.date},"${r.name}",${r.currency},${r.amount},${r.rate},${usd(r).toFixed(2)},"${r.notes||''}","${r.trip||''}"\n`;});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='receipts_2026.csv';a.click();
+}
+function msg(t,type){
+  const el=document.getElementById('fb');
+  el.className='fb '+type;el.textContent=t;
+  setTimeout(()=>el.className='fb',3000);
+}
+</script>
+</body>
+</html>
